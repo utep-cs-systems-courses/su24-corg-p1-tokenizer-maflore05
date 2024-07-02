@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "tokenizer.h"
+#include "history.h"
+
+int buff_size = 32;
+
+int main() {
+  printf("Welcome! Enter a string to get started.\n");
+  List *userHist = init_history();
+  int running = 1;
+
+  while (running) {
+    char str[buff_size];
+    printf("> ");
+    if (fgets(str, buff_size, stdin) == NULL) {
+      continue; // Continue to the next iteration if fgets fails
+    }
+
+    // Remove the newline character if present
+    size_t len = strlen(str);
+    if (len > 0 && str[len - 1] == '\n') {
+      str[len - 1] = '\0';
+    }
+
+    if (str[0] == '!') {
+      if (str[1] == 'q') {
+	free_history(userHist);
+	running = 0; // Set the flag to stop the loop
+      } else if (str[1] == 'h') {
+	print_history(userHist);
+      } else {
+	char *cutoff = &str[1];
+	int idx = atoi(cutoff);
+	char *specHist = get_history(userHist, idx);
+	if (specHist && specHist[0] != '\0') {
+	  printf("User requested history at [%d]: %s\n", idx, specHist);
+	  char **tokens = tokenize(specHist);
+	  print_tokens(tokens);
+	  free_tokens(tokens);
+	} else {
+	  printf("No history at index [%d].\n", idx);
+	}
+      }
+    } else {
+      char *p = &str[0];
+      add_history(userHist, p);
+    }
+  }
+
+  printf("Bye-Bye!\n");
+  return 0;
+}
